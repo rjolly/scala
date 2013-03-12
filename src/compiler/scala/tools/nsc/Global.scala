@@ -425,11 +425,13 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
   val printInfers = settings.Yinferdebug.value
 
   // phaseName = "parser"
-  object syntaxAnalyzer extends {
+  lazy val syntaxAnalyzer = new {
     val global: Global.this.type = Global.this
     val runsAfter = List[String]()
     val runsRightAfter = None
   } with SyntaxAnalyzer
+
+  import syntaxAnalyzer.{ UnitScanner, UnitParser }
 
   // !!! I think we're overdue for all these phase objects being lazy vals.
   // There's no way for a Global subclass to provide a custom typer
@@ -997,7 +999,7 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
 
   object typeDeconstruct extends {
     val global: Global.this.type = Global.this
-  } with interpreter.StructuredTypeStrings
+  } with typechecker.StructuredTypeStrings
 
   /** There are common error conditions where when the exception hits
    *  here, currentRun.currentUnit is null.  This robs us of the knowledge
@@ -1120,9 +1122,11 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
         warning("there were %d %s warning(s); re-run with %s for details".format(warnings.size, what, option.name))
   }
 
-  def newUnitParser(code: String)      = new syntaxAnalyzer.UnitParser(newCompilationUnit(code))
-  def newCompilationUnit(code: String) = new CompilationUnit(newSourceFile(code))
-  def newSourceFile(code: String)      = new BatchSourceFile("<console>", code)
+  def newCompilationUnit(code: String)                   = new CompilationUnit(newSourceFile(code))
+  def newSourceFile(code: String)                        = new BatchSourceFile("<console>", code)
+  def newUnitScanner(unit: CompilationUnit): UnitScanner = new UnitScanner(unit)
+  def newUnitParser(unit: CompilationUnit): UnitParser   = new UnitParser(unit)
+  def newUnitParser(code: String): UnitParser            = newUnitParser(newCompilationUnit(code))
 
   /** A Run is a single execution of the compiler on a sets of units
    */
@@ -1692,8 +1696,6 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
       }
     })
   }
-  def forInteractive   = false
-  def forScaladoc      = false
   def createJavadoc    = false
 }
 

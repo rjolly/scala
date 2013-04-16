@@ -598,8 +598,9 @@ class IMain(@BeanProperty val factory: ScriptEngineFactory, initialSettings: Set
     @throws(classOf[ScriptException])
     def eval(context: ScriptContext): Object = {
       val result = req.lineRep.evalEither match {
+        case Left(e: RuntimeException) => throw e
         case Left(e: Exception) => throw new ScriptException(e)
-        case Left(_) => throw new ScriptException("run-time error")
+        case Left(e) => throw e
         case Right(result) => result.asInstanceOf[Object]
       }
       if (!recorded) {
@@ -897,7 +898,7 @@ class IMain(@BeanProperty val factory: ScriptEngineFactory, initialSettings: Set
       val preamble = """
       |object %s {
       |  %s
-      |  val %s: String = %s {
+      |  lazy val %s: String = %s {
       |    %s
       |    (""
       """.stripMargin.format(

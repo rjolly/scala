@@ -1228,7 +1228,10 @@ TODO:
 <!-- ===========================================================================
                                   PACKED QUICK BUILD (PACK)
 ============================================================================ -->
-  <target name="pack.lib"    depends="quick.lib, forkjoin.done"> <staged-pack project="library"/></target>
+  <target name="pack.lib"    depends="quick.lib, forkjoin.done"> <staged-pack project="library"/>
+    <taskdef resource="scala/tools/ant/antlib.xml" classpath="${lib-ant.dir}/jarlister_2.11-1.0.jar:${build-pack.dir}/lib/scala-library.jar"/>
+    <jarlister file="${build-pack.dir}/lib/scala-library.jar"/>
+  </target>
 
   <target name="pack.reflect" depends="quick.reflect"> <staged-pack project="reflect"/> </target>
 
